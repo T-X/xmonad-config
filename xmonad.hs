@@ -47,6 +47,9 @@ import qualified XMonad.StackSet as S hiding (filter)
 import XMonad.Layout.Groups.Helpers
 import qualified XMonad.Layout.Groups as G
 
+-- Support wmctrl and (partially) OBS Xcomposite window capture
+import XMonad.Hooks.EwmhDesktops
+
 data Direction3D = XU -- X++
 		 | XD -- X--
 		 | YU -- Y--
@@ -82,7 +85,7 @@ myServedCommands = return
 	]
 
 main = do
-	xmonad $ defaultConfig {
+	xmonad $ ewmh defaultConfig {
 	  terminal = "lxterminal"
 --	  terminal = "gnome-terminal --hide-menubar"
 --	, modMask = mod4Mask
