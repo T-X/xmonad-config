@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-deprecations #-}
+
 -- merged from http://haskell.org/haskellwiki/Xmonad/Config_archive/sereven's_xmonad.hs_one-host
 -- and http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Doc-Extending.html
 import XMonad
