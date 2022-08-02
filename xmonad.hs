@@ -22,7 +22,6 @@ import Graphics.X11.ExtraTypes.XF86
 import XMonad.Actions.CycleWS as CW ( findWorkspace, Direction1D(Next), WSType(AnyWS), toggleOrView, shiftToPrev, toggleOrDoSkip )
 import XMonad.Actions.PerWorkspaceKeys (bindOn)
 
-import XMonad.Util.WorkspaceCompare as WC ( getSortByIndex )
 import XMonad.Util.Types
 import XMonad.Util.Timer
 import XMonad.Util.Paste (sendKey)
@@ -85,12 +84,8 @@ data Direction3D = XU -- X++
 		   deriving (Eq, Read, Show, Ord, Enum, Bounded)
 --		   deriving (Eq, Read, Show, Ord, Enum, Bounded, Typeable)
 
---numSubWS = 3
---numWS = 9
-
 workspaces :: [WorkspaceId]
 workspaces = map show [1 .. 9 :: Int] ++ ["0"]
---workspaces = ["web", "lshell", "rshell", "chat" ] ++ map show [5..(numSubWS * numWS)]
 
 switchKeyboardVariant = spawn "if setxkbmap -query | grep -q '^layout:.*us'; then setxkbmap lv && xmodmap $HOME/neon-def_de.xmodmap; else setxkbmap us; fi"
 
@@ -158,10 +153,6 @@ toRemove conf@(XConfig {XMonad.modMask = modm}) =
 	, (modm .|. shiftMask, xK_z)
 	, (modm .|. shiftMask, xK_m)
 	]
---	++ removeWorkspaceSwitches
---	where removeWorkspaceSwitches =
---		zip (repeat modm) [ xK_1 .. xK_9 ]
---		++ zip (repeat (shiftMask .|. modm)) [ xK_1 .. xK_9 ]
 
 -- Found out about xF86XK_Launch1 via 'xev' (keycode 156)
 -- via 'xmodmap -pke' (keycode 156 -> XF86Launch1)
@@ -261,48 +252,6 @@ toAdd conf@(XConfig {XMonad.modMask = modm}) =
 			, xK_h, xK_g, xK_f]	-- 7, 8, 9
 	-- mod-{v,l,c} %! Switch to physical/Xinerama screens 1, 2, or 3
 	-- mod-shift-{v,l,c} %! Move client to screen 1, 2, or 3
-
-
-{-	++
-	-- mod-{w,e,r} %! Switch to physical/Xinerama screens 1, 2, or 3
-	-- mod-shift-{w,e,r} %! Move client to screen 1, 2, or 3
-	[((m .|. modm, key), screenWorkspace sc >>= flip whenJust (windows . f))
-		| (key, sc) <- zip [xK_v, xK_l, xK_c] [0..]
-		, (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]	
-	++ addNewWorkspaceSwitches
-	++ addSubWorkspaceSwitches
-	where	addNewWorkspaceSwitches =
-			[((m .|. modm, k), windows $ f i)
-			| (i, k) <- zip (XMonad.workspaces conf) ([xK_1 .. xK_5] ++ [ xK_F1 .. xK_F4 ])
-			, (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]]
-		addSubWorkspaceSwitches =
-			[ ((modm, xK_Page_Up), nextSubWSZ)
-			, ((modm, xK_Page_Down), prevSubWSZ) ]
--}
-nextSubWSZ :: X ()
-nextSubWSZ = switchWorkspace 9
-
-prevSubWSZ :: X ()
-prevSubWSZ = switchWorkspace (-9)
-
-switchWorkspace :: Int -> X ()
-switchWorkspace d = wsBy d >>= windows . W.greedyView
-
-wsBy :: Int -> X (WorkspaceId)
-wsBy = CW.findWorkspace WC.getSortByIndex CW.Next CW.AnyWS
-
-{--findSubWorkspace :: X Int
-findSubWorkspace = do
-	ws <- gets windowset
-	let	cur	= W.workspace (W.current ws)
-		mCurIx	= findWsIndex cur (S.workspaces ws)
-	return mCurIx --}
-
-{-- findWsIndex :: WindowSpace -> [WindowSpace] -> Int
-findWsIndex ws wss = M.findIndex ((== W.tag ws) . W.tag) wss --}
-
-pageUpDownWSSwitch :: XConfig t -> [((KeyMask, KeySym), X ())]
-pageUpDownWSSwitch conf@(XConfig {XMonad.modMask = modm}) = []
 
 -- myManageHook = composeOne [ isFullscreen -?> doFullFLoat ]
 fullFloatFocused = withFocused $ \f -> windows =<< appEndo `fmap` runQuery 
