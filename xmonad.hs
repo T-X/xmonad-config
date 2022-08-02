@@ -50,6 +50,32 @@ import qualified XMonad.Layout.Groups as G
 -- Support wmctrl and (partially) OBS Xcomposite window capture
 import XMonad.Hooks.EwmhDesktops
 
+-- Layouts modifiers
+import XMonad.Layout.PerWorkspace (onWorkspace)
+import XMonad.Layout.Renamed (renamed, Rename(CutWordsLeft, Replace))
+import XMonad.Layout.WorkspaceDir
+import XMonad.Layout.Spacing (spacing)
+import XMonad.Layout.NoBorders
+import XMonad.Layout.LimitWindows (limitWindows, increaseLimit, decreaseLimit)
+import XMonad.Layout.WindowArranger (windowArrange, WindowArrangerMsg(..))
+import XMonad.Layout.Reflect (reflectVert, reflectHoriz, REFLECTX(..), REFLECTY(..))
+import XMonad.Layout.MultiToggle (mkToggle, single, EOT(EOT), Toggle(..), (??))
+import XMonad.Layout.MultiToggle.Instances (StdTransformers(NBFULL, MIRROR, NOBORDERS))
+import qualified XMonad.Layout.ToggleLayouts as T (toggleLayouts, ToggleLayout(Toggle))
+
+-- Layouts
+import XMonad.Layout.GridVariants (Grid(Grid))
+import XMonad.Layout.SimplestFloat
+import XMonad.Layout.OneBig
+import XMonad.Layout.ThreeColumns
+import XMonad.Layout.ResizableTile
+import XMonad.Layout.ZoomRow (zoomRow, zoomIn, zoomOut, zoomReset, ZoomMessage(ZoomFullToggle))
+import XMonad.Layout.IM (withIM, Property(Role))
+
+-- https://dev.to/l04db4l4nc3r/xmonad-hackability-at-a-cost-390a
+-- https://github.com/L04DB4L4NC3R/DEC/blob/master/.xmonad/xmonad.hs
+
+
 data Direction3D = XU -- X++
 		 | XD -- X--
 		 | YU -- Y--
@@ -157,11 +183,13 @@ toggleOrShift = CW.toggleOrDoSkip [] W.shift
 shiftWithZero = do
 	bindOn [ ("0",  shiftFromZero), ("", shiftToZero)]
 
-layout = Full ||| tiled ||| Mirror tiled
+layout = Full ||| tiled ||| Mirror tiled ||| Grid (16/10) ||| myGrid ||| myOneBig ||| OneBig (5/9) (8/12)
 	where tiled	= Tall nmaster delta ratio
 	      nmaster	= 1
 	      ratio	= 1/2
 	      delta	= 3/100
+	      myGrid	= limitWindows 12 $ spacing 6 $ mkToggle (single MIRROR) $ Grid (16/10)
+	      myOneBig	= limitWindows 6  $ Mirror $ mkToggle (single MIRROR) $ mkToggle (single REFLECTX) $ mkToggle (single REFLECTY) $ OneBig (5/9) (8/12)
 
 -- Key bindings being added
 toAdd conf@(XConfig {XMonad.modMask = modm}) =
