@@ -139,11 +139,24 @@ toRemove conf@(XConfig {XMonad.modMask = modm}) =
 	, (modm, xK_w)
 	, (modm, xK_e)
 	, (modm, xK_r)
-	, (modm .|. shiftMask, xK_c)
-	, (modm .|. shiftMask, xK_j)
-	, (modm .|. shiftMask, xK_k)
+	, (modm, xK_v)
+	, (modm, xK_l)
+	, (modm, xK_c)
 	, (modm, xK_z)
 	, (modm, xK_m)
+	, (modm .|. shiftMask, xK_h)
+	, (modm .|. shiftMask, xK_j)
+	, (modm .|. shiftMask, xK_k)
+	, (modm .|. shiftMask, xK_l)
+	, (modm .|. shiftMask, xK_t)
+	, (modm .|. shiftMask, xK_w)
+	, (modm .|. shiftMask, xK_e)
+	, (modm .|. shiftMask, xK_r)
+	, (modm .|. shiftMask, xK_v)
+	, (modm .|. shiftMask, xK_l)
+	, (modm .|. shiftMask, xK_c)
+	, (modm .|. shiftMask, xK_z)
+	, (modm .|. shiftMask, xK_m)
 	]
 --	++ removeWorkspaceSwitches
 --	where removeWorkspaceSwitches =
@@ -201,8 +214,7 @@ toAdd conf@(XConfig {XMonad.modMask = modm}) =
 	, ((modm, xK_t), focusUp)
 	, ((modm, xK_w), withFocused $ windows . W.sink)
 	, ((modm .|. shiftMask, xK_r), swapDown)
---	, ((modm .|. shiftMask, xK_t), swapUp)
-	, ((modm .|. shiftMask, xK_t), spawnOn "rshell" "gnome-terminal --hide-menubar")
+	, ((modm .|. shiftMask, xK_t), swapUp)
 --	, ((modm .|. shiftMask, xK_r), windows W.swapDown)
 --	, ((modm .|. shiftMask, xK_t), windows W.swapUp)
 	, ((modm .|. shiftMask, xK_c), kill)
@@ -237,11 +249,19 @@ toAdd conf@(XConfig {XMonad.modMask = modm}) =
 	-- mod-[1..9] %! Switch to workspace N
 	-- mod-shift-[1..9] %! Move client to workspace N
 	[((m .|. modm .|. mod5Mask, k), windows $ f i)
-	| (i, k) <- zip (XMonad.workspaces conf) keys
+	| (i, k) <- zip (XMonad.workspaces conf) wskeys
 	, (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]]
-	where keys =	[ xK_m, xK_ssharp, xK_j	-- 1, 2, 3
+	++
+	[((m .|. modm, key), screenWorkspace sc >>= flip whenJust (windows . f))
+	| (key, sc) <- zip [xK_v, xK_l, xK_c] [0..], (f, m) <- [(W.view, 0)
+	, (W.shift, shiftMask)]
+	]
+	where wskeys =	[ xK_m, xK_ssharp, xK_j	-- 1, 2, 3
 			, xK_n, xK_r, xK_t	-- 4, 5, 6
 			, xK_h, xK_g, xK_f]	-- 7, 8, 9
+	-- mod-{v,l,c} %! Switch to physical/Xinerama screens 1, 2, or 3
+	-- mod-shift-{v,l,c} %! Move client to screen 1, 2, or 3
+
 
 {-	++
 	-- mod-{w,e,r} %! Switch to physical/Xinerama screens 1, 2, or 3
