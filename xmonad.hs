@@ -268,7 +268,7 @@ startup = do
 	spawnOnce "$HOME/.xmonad/autostart.sh"
 	spawnOn "lshell" "lxterminal"
 	spawnOn "0" "lxterminal"
-	spawnOn "2" "lxterminal -e 'bluetoothctl'"
+	spawnOn "2" "pidof bluetoothctl || lxterminal -e 'bluetoothctl'"
 --	myTimer
 --	spawnOn "web" "/usr/lib/iceweasel/firefox-bin"
 
