@@ -195,6 +195,24 @@ layout = Full ||| tiled ||| Mirror tiled ||| Grid (16/10) ||| myGrid ||| myOneBi
 	      myGrid	= limitWindows 12 $ spacing 6 $ mkToggle (single MIRROR) $ Grid (16/10)
 	      myOneBig	= limitWindows 6  $ Mirror $ mkToggle (single MIRROR) $ mkToggle (single REFLECTX) $ mkToggle (single REFLECTY) $ OneBig (5/9) (8/12)
 
+-- mod-[1..9] %! Switch to workspace N
+-- mod-shift-[1..9] %! Move client to workspace N
+myWorkspaceKeyActions modm conf = do
+	(idx, key) <- zip (XMonad.workspaces conf) keys
+	(func, mkey) <- [(W.greedyView, 0), (W.shift, shiftMask)]
+	return ((mkey .|. modm .|. mod5Mask, key), windows $ func idx)
+	where keys =	[ xK_m, xK_ssharp, xK_j	-- 1, 2, 3
+			, xK_n, xK_r, xK_t	-- 4, 5, 6
+			, xK_h, xK_g, xK_f]	-- 7, 8, 9
+
+-- mod-{v,l,c} %! Switch to physical/Xinerama screens 1, 2, or 3
+-- mod-shift-{v,l,c} %! Move client to screen 1, 2, or 3
+myXineramaKeyActions modm conf = do
+	(key, scr) <- zip keys [0..]
+	(func, mkey) <- [(W.view, 0), (W.shift, shiftMask)]
+	return ((mkey .|. modm, key), screenWorkspace scr >>= flip whenJust (windows . func))
+	where keys = [xK_v, xK_l, xK_c]
+
 -- Key bindings being added
 toAdd conf@(XConfig {XMonad.modMask = modm}) =
 	[ ((modm, xK_n), sendMessage Shrink)
@@ -236,22 +254,7 @@ toAdd conf@(XConfig {XMonad.modMask = modm}) =
 --	, ((modm), submap . M.fromList $ [ ((modm), spawn "xmessage 'yes!'") ]
 --	, ((modm, xK_Page_Up), workspaceUp )
 	]
-	++
-	-- mod-[1..9] %! Switch to workspace N
-	-- mod-shift-[1..9] %! Move client to workspace N
-	[((m .|. modm .|. mod5Mask, k), windows $ f i)
-	| (i, k) <- zip (XMonad.workspaces conf) wskeys
-	, (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]]
-	++
-	[((m .|. modm, key), screenWorkspace sc >>= flip whenJust (windows . f))
-	| (key, sc) <- zip [xK_v, xK_l, xK_c] [0..], (f, m) <- [(W.view, 0)
-	, (W.shift, shiftMask)]
-	]
-	where wskeys =	[ xK_m, xK_ssharp, xK_j	-- 1, 2, 3
-			, xK_n, xK_r, xK_t	-- 4, 5, 6
-			, xK_h, xK_g, xK_f]	-- 7, 8, 9
-	-- mod-{v,l,c} %! Switch to physical/Xinerama screens 1, 2, or 3
-	-- mod-shift-{v,l,c} %! Move client to screen 1, 2, or 3
+	++ myWorkspaceKeyActions modm conf ++ myXineramaKeyActions modm conf
 
 -- myManageHook = composeOne [ isFullscreen -?> doFullFLoat ]
 fullFloatFocused = withFocused $ \f -> windows =<< appEndo `fmap` runQuery 
