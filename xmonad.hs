@@ -31,6 +31,8 @@ import Graphics.X11.Xlib.Extras as EV
 import XMonad.Hooks.ServerMode as SM
 import XMonad.Actions.Commands as AC
 
+import XMonad.Util.PureX (curScreenId)
+
 -- import XMonad.Core as XMonad hiding
 --    (workspaces,manageHook,numlockMask,keys,logHook,startupHook,borderWidth,mouseBindings
 --    ,layoutHook,modMask,terminal,normalBorderColor,focusedBorderColor,focusFollowsMouse
@@ -169,6 +171,144 @@ escCMD = do
 		, ("", spawn "xdotool keyup Super_L; xmodmap -e 'clear mod1' -e 'clear mod4' -e 'keycode 64 = Super_R' -e 'add mod4 = Super_R'")]
 	CW.toggleOrView "0"
 
+data OnAirAction = GoOnAirNew | GoOnAirSwap | GoOffAir deriving (Eq,Enum,Show)
+
+--
+-- SCR/PHY: physical screen
+-- SCR/VIR: virtual screen which can be either used for a workspace to stay
+--   viewable and therefore its windows capturable via Xcomposite window
+--   captures; or keeping the the whole screen/workspace capturable via XSHM
+--
+
+--
+-- spawnGoOnAirNew:
+--
+--  =========  =========  =========                  =========  =========  =========
+-- ||id:7   ||||id:8   ||||id:9   ||                ||id:7   ||||id:8   ||||id:9   ||
+-- ||       ||||       ||||       ||                ||       ||||       ||||       ||
+-- ||       ||||       ||||       ||                ||       ||||       ||||       ||
+--  =========  =========  =========                  =========  =========  =========
+--  =========  =========  =========                  =========  =========  =========
+-- ||id:4   ||||id:5   ||||id:6   ||      ~~~>>     ||id:4   ||||id:5   ||||id:6   ||
+-- ||       ||||       ||||       ||                ||       ||||       ||||       ||
+-- ||       ||||       ||||       ||                ||       ||||       ||||       ||
+--  =========  =========  =========                  =========  =========  =========
+--  =========  =========  =========  .........       =========  =========  =========  .........
+-- ||id:1   ||||id:2   ||||id:3   ||..id:0   ..     ||id:1   ||||id:2   ||||id:3   ||..id:0   ..
+-- ||       ||||SCR/PHY||||       ||..SCR/VIR..     ||       ||||SCR/PHY||||       ||..       ..
+-- ||       ||||       ||||       ||..       ..     ||       ||||SCR/VIR||||       ||..       ..
+--  =========  =========  =========  .........       =========  =========  =========  .........
+--
+spawnGoOnAirNew :: X ()
+spawnGoOnAirNew = spawnSetVirtualScreenMirrored -- just collapse/mirror screens on current workspace
+
+--
+-- spawnGoOnAirSwap:
+--
+--  =========  =========  =========                  =========  =========  =========
+-- ||id:7   ||||id:8   ||||id:9   ||                ||id:7   ||||id:8   ||||id:9   ||
+-- ||       ||||       ||||       ||                ||       ||||       ||||       ||
+-- ||       ||||       ||||       ||                ||       ||||       ||||       ||
+--  =========  =========  =========                  =========  =========  =========
+--  =========  =========  =========                  =========  =========  =========
+-- ||id:4   ||||id:5   ||||id:6   ||      ~~~>>     ||id:4   ||||id:5   ||||id:6   ||
+-- ||       ||||       ||||       ||                ||       ||||       ||||       ||
+-- ||       ||||       ||||       ||                ||       ||||       ||||       ||
+--  =========  =========  =========                  =========  =========  =========
+--  =========  =========  =========  .........       =========  =========  =========  .........
+-- ||id:1   ||||id:2   ||||id:3   ||..id:0   ..     ||id:1   ||||id:2   ||||id:3   ||..id:0   ..
+-- ||       ||||SCR/PHY||||SCR/VIR||..       ..     ||       ||||SCR/PHY||||       ||..       ..
+-- ||       ||||       ||||       ||..       ..     ||       ||||SCR/VIR||||       ||..       ..
+--  =========  =========  =========  .........       =========  =========  =========  .........
+--
+spawnGoOnAirSwap :: X ()
+spawnGoOnAirSwap = spawnSetVirtualScreenMirrored -- just collapse/mirror screens on current workspace
+
+--
+-- spawnGoOffAir:
+--
+--  =========  =========  =========                  =========  =========  =========
+-- ||id:7   ||||id:8   ||||id:9   ||                ||id:7   ||||id:8   ||||id:9   ||
+-- ||       ||||       ||||       ||                ||       ||||       ||||       ||
+-- ||       ||||       ||||       ||                ||       ||||       ||||       ||
+--  =========  =========  =========                  =========  =========  =========
+--  =========  =========  =========                  =========  =========  =========
+-- ||id:4   ||||id:5   ||||id:6   ||      ~~~>>     ||id:4   ||||id:5   ||||id:6   ||
+-- ||       ||||       ||||       ||                ||       ||||       ||||       ||
+-- ||       ||||       ||||       ||                ||       ||||       ||||       ||
+--  =========  =========  =========                  =========  =========  =========
+--  =========  =========  =========  .........       =========  =========  =========  .........
+-- ||id:1   ||||id:2   ||||id:3   ||..id:0   ..     ||id:1   ||||id:2   ||||id:3   ||..id:0   ..
+-- ||       ||||SCR/PHY||||       ||..       ..     ||       ||||SCR/PHY||||       ||..SCR/VIR..
+-- ||       ||||SCR/VIR||||       ||..       ..     ||       ||||       ||||       ||..       ..
+--  =========  =========  =========  .........       =========  =========  =========  .........
+--
+spawnGoOffAir :: Maybe WorkspaceId -> X ()
+spawnGoOffAir scr1ws = do
+	case scr1ws of
+		Just idx -> do
+			-- move to hidden workspace "0" with both our
+			-- mirrored screens first, before separation,
+			-- to avoid leaking other, sensitive workspaces
+			windows $ W.greedyView "0"
+			spawnSetVirtualScreenLeft
+			-- TODO: Currently it seems that after the
+			-- xrandr un-mirror'ing above the separate virtual
+			-- screen actually attaches back to the workspace
+			-- we just came from. Which is fine, this workspace
+			-- was "on the air" just before. Seems to work
+			-- from various other workspace IDs. But is this
+			-- always ensured to behave like this?
+			windows $ W.greedyView idx
+		Nothing -> return ()
+
+toggleOnAir :: X ()
+toggleOnAir = do
+	scr1ws <- screenWorkspace 0
+	scr2ws <- screenWorkspace 1
+	curScr <- curScreenId
+	let onPhyScr = if curScr == 0 then True else False
+	let goOnAir = case (onPhyScr, scr1ws, scr2ws) of
+		-- is current workspace "off the air" (= separate screens), go on the air?
+		(True, Just a, Just b) ->
+			-- sanity check, should not happen
+			if a == b then Nothing
+			-- nothing is on the air yet (virtual screen on hidden workspace 0)
+			else if b == "0" then Just GoOnAirNew
+			-- something is on the air, swap on-air
+			else if b /= "0" then Just GoOnAirSwap
+			else Nothing
+		-- is current workspace "on the air" (= mirrored screens), go off the air?
+		(True, Just a, Nothing) -> Just GoOffAir
+		_ -> Nothing
+	let screen1str = if curScr == 0 then "[screen1]: " else "screen1: "
+	let screen2str = if curScr /= 0 then "[screen2]: " else "screen2: "
+	let screen1wsstr = case scr1ws of
+		Just s -> s ++ ", "
+		Nothing -> "<undefined>, "
+	let screen2wsstr = case scr2ws of
+		Just s -> s ++ ", "
+		Nothing -> "<undefined>, "
+	let dbgStr = "xmonad: toggleOnAir: " ++ screen1str ++ screen1wsstr ++ screen2str ++ screen2wsstr
+	case goOnAir of
+		Just GoOnAirNew -> do
+			osdMSG (dbgStr ++ "-> going ON the air (new)")
+			spawnGoOnAirNew
+		Just GoOnAirSwap -> do
+			osdMSG (dbgStr ++ "-> going ON the air (swap)")
+			spawnGoOnAirSwap
+		Just GoOffAir -> do
+			osdMSG (dbgStr ++ "-> going OFF the air")
+			spawnGoOffAir scr1ws
+		_ -> return ()
+
+osdMSG :: String -> X ()
+osdMSG msg = spawn osdcmd
+	where
+		osdcat = "osd_cat --align center --color red --outline 4 --outlinecolour green --pos top --lines 1 --delay 30 --font \"-*-*-*-*-*-*-28-*-*-*-*-*-*-*\""
+--		osdcmd = "echo \"$(date --utc): " ++ msg ++ "\" | " ++ osdcat
+		osdcmd = "echo \"$(date --utc): " ++ msg ++ "\" >> /tmp/xmonad.log"
+
 shiftFromZero = do
 --	spawn "xmessage hello from 0"
 	windows $ W.shift "1"
@@ -195,20 +335,131 @@ layout = Full ||| tiled ||| Mirror tiled ||| Grid (16/10) ||| myGrid ||| myOneBi
 	      myGrid	= limitWindows 12 $ spacing 6 $ mkToggle (single MIRROR) $ Grid (16/10)
 	      myOneBig	= limitWindows 6  $ Mirror $ mkToggle (single MIRROR) $ mkToggle (single REFLECTX) $ mkToggle (single REFLECTY) $ OneBig (5/9) (8/12)
 
+
+-- ToDos:
+--
+-- Use getScreenInfo (or similar?) to get the primary, physical screen
+-- and to get the current resolution on the physical screen.
+--
+-- Is there a way to add a dummy screen without editing something
+-- like /etc/X11/xorg.conf and without needing root privileges?
+-- (At least check if virScreen is disconnected/unused?)
+--
+-- NOTE: virtPos "Just Right ()" won't work well with XSHM desktop
+-- capture! Use "Just Left ()" instead.
+--
+--spawnXrandr (Maybe (Either)) :: X ()
+spawnXrandr :: (Maybe (Either a b)) -> X ()
+spawnXrandr virtPos = do
+	let posPhyX = case virtPos of
+		Just (Left _) -> resX
+		Just (Right _) -> "0"
+		Nothing -> "0"
+	let posVirX = case virtPos of
+		Just (Left _) -> "0"
+		Just (Right _) -> resX
+		Nothing -> "0"
+	spawn	(concat $
+		[ "xrandr --addmode ", virScreen, " ", resX, "x", resY, "; "
+		, "xrandr --output ", phyScreen, " --primary --mode ", resX, "x", resY, " --pos ", posPhyX, "x0 --rotate normal "
+		, "--output ", virScreen, " --mode ", resX, "x", resY, " --pos ", posVirX, "x0 --rotate normal"
+		])
+	where
+		phyScreen = "eDP-1"
+		virScreen = "HDMI-1"
+		resX = "2560"
+		resY = "1440"
+
+
+-- spawn ("xrandr --addmode HDMI-1 2560x1440; xrandr --output eDP-1 --primary --mode 2560x1440 --pos 0x0 --rotate normal --output DP-1 --off --output HDMI-2 --off --output DP-2 --off --output HDMI-1 --mode 2560x1440 --pos 0x0 --rotate normal")
+spawnSetVirtualScreenMirrored :: X ()
+spawnSetVirtualScreenMirrored = spawnXrandr Nothing
+
+-- spawn ("xrandr --addmode HDMI-1 2560x1440; xrandr --output eDP-1 --primary --mode 2560x1440 --pos 0x0 --rotate normal --output DP-1 --off --output HDMI-1 --mode 2560x1440 --pos 2560x0 --rotate normal --output DP-2 --off --output HDMI-2 --off")
+----
+-- NOTE: spawnSetVirtualScreenRight does not work as expected with
+-- OBS' XSHM desktop capture mode. OBS does not recognize the altered
+-- position of the virtual screen automatically and will keep capturing
+-- on position 0x0 or 2560x0, depending on what/when this was selected
+-- in OBS. Which will either capture nothing or start capturing from the
+-- separated physical screen.
+spawnSetVirtualScreenRight :: X ()
+spawnSetVirtualScreenRight = spawnXrandr $ Just $ Right ()
+
+-- spawn ("xrandr --addmode HDMI-1 2560x1440; xrandr --output eDP-1 --primary --mode 2560x1440 --pos 2560x0 --rotate normal --output DP-1 --off --output HDMI-2 --off --output DP-2 --off --output HDMI-1 --mode 2560x1440 --pos 0x0 --rotate normal")
+spawnSetVirtualScreenLeft :: X ()
+spawnSetVirtualScreenLeft = spawnXrandr $ Just $ Left ()
+
+-- TODO: Don't assume that primary is on screenWorkspace 0
+-- and virtual one on screenWorkspace 1.
+myWindows view toWS = do
+	scr1ws <- screenWorkspace 0
+	scr2ws <- screenWorkspace 1
+	curScr <- curScreenId
+	let onPhyScr = if curScr == 0 then True else False
+	let doXrandrMirror = case (scr1ws, scr2ws) of
+		-- separate screens, are we going to switch to mirrored screens?
+		(Just a, Just b) -> if a /= b && ((onPhyScr && b == toWS) || (not onPhyScr && a == toWS))
+					then Just True
+					else Nothing
+		-- mirrored screens, are we going to switch to separate screens?
+		(Just a, Nothing) -> if a /= toWS
+					then Just False
+					else Nothing
+		_ -> Nothing
+	let screen1str = if curScr == 0 then "[screen1]: " else "screen1: "
+	let screen2str = if curScr /= 0 then "[screen2]: " else "screen2: "
+	let screen1wsstr = case scr1ws of
+		Just s -> s ++ ", "
+		Nothing -> "<undefined>, "
+	let screen2wsstr = case scr2ws of
+		Just s -> s ++ ", "
+		Nothing -> "<undefined>, "
+	let toWSstr = "toWS: " ++ show toWS
+	let dbgStr = "xmonad: " ++ screen1str ++ screen1wsstr ++ screen2str ++ screen2wsstr ++ toWSstr ++ " -> toggling mirror "
+	case doXrandrMirror of
+		Just True -> do
+			osdMSG (dbgStr ++ "ON")
+			--spawn ("xmessage \"Going to toggle mirror ON\"")
+			--spawn ("~/.screenlayout/virtual-mirror.sh")
+			spawnSetVirtualScreenMirrored
+		Just False -> do
+			osdMSG (dbgStr ++ "OFF")
+			--spawn ("xmessage \"Going to toggle mirror OFF\"")
+			--spawn ("~/.screenlayout/virtual-right.sh")
+			--windows $ W.greedyView "0"
+			-- ^- This does not work/help
+			spawnSetVirtualScreenLeft
+			-- TODO: some race condition here, capture screen
+			-- will show the output of toWS for a few seconds?
+		_ -> return ()
+	windows $ (view toWS)
+
 -- mod-[1..9] %! Switch to workspace N
--- mod-shift-[1..9] %! Move client to workspace N
-myWorkspaceKeyActions modm conf = do
+myWorkspaceKeyActionsSW modm conf = do
 	(idx, key) <- zip (XMonad.workspaces conf) keys
-	(func, mkey) <- [(W.greedyView, 0), (W.shift, shiftMask)]
+	return ((modm .|. mod5Mask, key), myWindows W.greedyView idx)
+	where keys =	[ xK_m, xK_ssharp, xK_j	-- 1, 2, 3
+			, xK_n, xK_r, xK_t	-- 4, 5, 6
+			, xK_h, xK_g, xK_f]	-- 7, 8, 9
+
+-- mod-shift-[1..9] %! Move client to workspace N
+myWorkspaceKeyActionsMV modm conf = do
+	(idx, key) <- zip (XMonad.workspaces conf) keys
+	(func, mkey) <- [(W.shift, shiftMask)]
 	return ((mkey .|. modm .|. mod5Mask, key), windows $ func idx)
 	where keys =	[ xK_m, xK_ssharp, xK_j	-- 1, 2, 3
 			, xK_n, xK_r, xK_t	-- 4, 5, 6
 			, xK_h, xK_g, xK_f]	-- 7, 8, 9
 
+myWorkspaceKeyActions modm conf =
+	myWorkspaceKeyActionsSW modm conf ++ myWorkspaceKeyActionsMV modm conf
+
+
 -- mod-{v,l,c} %! Switch to physical/Xinerama screens 1, 2, or 3
 -- mod-shift-{v,l,c} %! Move client to screen 1, 2, or 3
 myXineramaKeyActions modm conf = do
-	(key, scr) <- zip keys [0..]
+	(key, scr) <- zip keys (0:[2..]) -- TODO: find+filter out virtual screen automatically
 	(func, mkey) <- [(W.view, 0), (W.shift, shiftMask)]
 	return ((mkey .|. modm, key), screenWorkspace scr >>= flip whenJust (windows . func))
 	where keys = [xK_v, xK_l, xK_c]
@@ -249,6 +500,7 @@ toAdd conf@(XConfig {XMonad.modMask = modm}) =
 --	, ((modm, xK_Escape), CW.toggleOrView "0")
 	, ((modm, xK_Escape), escCMD)
 	, ((modm, xK_asciicircum), escCMD)
+	, ((modm, xK_BackSpace), toggleOnAir)
 	, ((modm .|. shiftMask, xK_Escape), toggleOrShift "0")
 --	, ((modm .|. shiftMask, xK_Escape), shiftWithZero)
 --	, ((modm), submap . M.fromList $ [ ((modm), spawn "xmessage 'yes!'") ]
