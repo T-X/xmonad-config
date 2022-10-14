@@ -11,10 +11,14 @@ import XMonad.Actions.SpawnOn
 import XMonad.Util.SpawnOnce (spawnOnce)
 import Data.Monoid
 import XMonad.Layout.NoBorders (smartBorders)
+import XMonad.Layout.Stoppable (stoppable)
 
 import XMonad.Hooks.ManageDocks (manageDocks)
 import XMonad.Hooks.ManageHelpers
 import XMonad.Hooks.SetWMName
+
+import XMonad.Util.RemoteWindows
+import Network.BSD
 
 import XMonad.Util.CustomKeys
 import Graphics.X11.ExtraTypes.XF86
@@ -116,9 +120,13 @@ main = do
 	, XMonad.focusedBorderColor = "blue"
 	, keys = customKeys toRemove toAdd
 --	, manageHook = manageSpawn <+> manageHook defaultConfig
-	, manageHook = manageSpawn <+> myManageHook <+> manageHook defaultConfig
+	, manageHook = (manageRemote =<< io getHostName) <+> manageSpawn <+> myManageHook <+> manageHook defaultConfig
 	, startupHook = startup
-	, layoutHook = G.group (smartBorders layout) Full
+--	, layoutHook = onWorkspace "7" (stoppable Full) $
+--			G.group (smartBorders layout) Full
+--	, layoutHook = G.group (smartBorders layout) Full ||| stoppable (G.group (smartBorders layout) Full)
+	, layoutHook = Full ||| stoppable Full
+
 --	, layoutHook = G.group (smartBorders (layoutHook defaultConfig)) Full
 	, focusFollowsMouse  = False
 	, handleEventHook = serverModeEventHook' myServedCommands
