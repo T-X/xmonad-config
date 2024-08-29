@@ -265,7 +265,8 @@ fullFloatFocused = withFocused $ \f -> windows =<< appEndo `fmap` runQuery
 startup = do
 --	sp <- mkSpawner
 --	spawn "setxkbmap lv && xmodmap $HOME/neon_de.xmodmap && xset -r 51"
-	spawnOnce "pulseaudio -D"
+--	spawnOnce "pulseaudio -D"
+--	spawnOnce "systemctl --user restart pulseaudio.service"
 	spawnOnce "setxkbmap lv && xmodmap $HOME/neon-def_de.xmodmap"
 	setWMName "LG3D" -- Breaks current gtk3 (this was a workaround for JDK6)
 	spawnOnce "$HOME/.xmonad/autostart.sh"
