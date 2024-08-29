@@ -109,7 +109,8 @@ main = do
 	xmonad $ ewmh defaultConfig {
 	  terminal = "lxterminal"
 --	  terminal = "gnome-terminal --hide-menubar"
---	, modMask = mod4Mask
+	--, modMask = mod4Mask
+	, modMask = mod1Mask
 	, XMonad.workspaces = Main.workspaces
 --	, XMonad.layoutHook = layout
 --	, XMonad.borderWidth = 1
@@ -123,6 +124,8 @@ main = do
 	, focusFollowsMouse  = False
 	, handleEventHook = serverModeEventHook' myServedCommands
 	} 
+
+-- All available keys: https://github.com/xmonad/X11/blob/master/Graphics/X11/Types.hsc
 
 -- Key bindings being removed from the default config
 toRemove conf@(XConfig {XMonad.modMask = modm}) =
@@ -200,7 +203,8 @@ layout = Full ||| tiled ||| Mirror tiled ||| Grid (16/10) ||| myGrid ||| myOneBi
 myWorkspaceKeyActions modm conf = do
 	(idx, key) <- zip (XMonad.workspaces conf) keys
 	(func, mkey) <- [(W.greedyView, 0), (W.shift, shiftMask)]
-	return ((mkey .|. modm .|. mod5Mask, key), windows $ func idx)
+	return ((mkey .|. modm .|. mod3Mask, key), windows $ func idx)
+--	return ((mkey .|. modm .|. mod5Mask, key), windows $ func idx)
 	where keys =	[ xK_m, xK_ssharp, xK_j	-- 1, 2, 3
 			, xK_n, xK_r, xK_t	-- 4, 5, 6
 			, xK_h, xK_g, xK_f]	-- 7, 8, 9
@@ -238,13 +242,13 @@ toAdd conf@(XConfig {XMonad.modMask = modm}) =
 	, ((modm, xK_z), return ())
 	, ((modm, xK_b), sendKey modm xK_b)
 	, ((modm,               xK_Up   ), focusGroupUp)
-	, ((modm .|. mod5Mask,  xK_l    ), focusGroupUp)
+	, ((modm .|. mod3Mask,  xK_l    ), focusGroupUp)
 	, ((modm,               xK_Down ), focusGroupDown)
-	, ((modm .|. mod5Mask,  xK_a    ), focusGroupDown)
+	, ((modm .|. mod3Mask,  xK_a    ), focusGroupDown)
 	, ((modm .|. shiftMask, xK_Up   ), moveToGroupUp False)
-	, ((modm .|. mod5Mask .|. shiftMask, xK_l ), moveToGroupUp False)
+	, ((modm .|. mod3Mask .|. shiftMask, xK_l ), moveToGroupUp False)
 	, ((modm .|. shiftMask, xK_Down ), moveToGroupDown False)
-	, ((modm .|. mod5Mask .|. shiftMask, xK_a ), moveToGroupDown False)
+	, ((modm .|. mod3Mask .|. shiftMask, xK_a ), moveToGroupDown False)
 --	, ((modm, xK_Escape), spawnOn "rshell" "lxterminal")
 --	, ((modm, xK_Escape), CW.toggleOrView "0")
 	, ((modm, xK_Escape), escCMD)
@@ -267,7 +271,8 @@ startup = do
 --	spawn "setxkbmap lv && xmodmap $HOME/neon_de.xmodmap && xset -r 51"
 --	spawnOnce "pulseaudio -D"
 --	spawnOnce "systemctl --user restart pulseaudio.service"
-	spawnOnce "setxkbmap lv && xmodmap $HOME/neon-def_de.xmodmap"
+	--spawnOnce "setxkbmap lv && xmodmap $HOME/neon-def_de.xmodmap"
+	spawnOnce "setxkbmap custom"
 	setWMName "LG3D" -- Breaks current gtk3 (this was a workaround for JDK6)
 	spawnOnce "$HOME/.xmonad/autostart.sh"
 	spawnOn "lshell" "lxterminal"
