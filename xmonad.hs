@@ -1,9 +1,5 @@
 {-# OPTIONS_GHC -Wno-deprecations #-}
 
--- $ cabal update
--- $ cabal install --package-env=$HOME/.xmonad --lib base xmonad xmonad-contrib X11
--- $ cabal install --package-env=$HOME/.xmonad xmonad
-
 -- merged from http://haskell.org/haskellwiki/Xmonad/Config_archive/sereven's_xmonad.hs_one-host
 -- and http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Doc-Extending.html
 import XMonad
@@ -19,8 +15,6 @@ import XMonad.Layout.NoBorders (smartBorders)
 import XMonad.Hooks.ManageDocks (manageDocks)
 import XMonad.Hooks.ManageHelpers
 import XMonad.Hooks.SetWMName
-import XMonad.Util.Hacks (fixSteamFlicker)
---import XMonad.Hooks.FloatConfigureReq (fixSteamFlicker)
 
 import XMonad.Util.CustomKeys
 import Graphics.X11.ExtraTypes.XF86
@@ -53,7 +47,6 @@ import XMonad.Layout.Groups.Helpers
 import qualified XMonad.Layout.Groups as G
 
 -- Support wmctrl and (partially) OBS Xcomposite window capture
--- Should also fix SteamVR and Steam menu issues?
 import XMonad.Hooks.EwmhDesktops
 
 -- Layouts modifiers
@@ -129,7 +122,6 @@ main = do
 	, layoutHook = G.group (smartBorders layout) Full
 --	, layoutHook = G.group (smartBorders (layoutHook defaultConfig)) Full
 	, focusFollowsMouse  = False
---	, handleEventHook = fixSteamFlicker <+> serverModeEventHook' myServedCommands
 	, handleEventHook = serverModeEventHook' myServedCommands
 	} 
 
