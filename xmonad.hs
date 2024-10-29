@@ -254,6 +254,12 @@ toAdd conf@(XConfig {XMonad.modMask = modm}) =
 	, ((modm, xK_Escape), escCMD)
 	, ((modm, xK_asciicircum), escCMD)
 	, ((modm .|. shiftMask, xK_Escape), toggleOrShift "0")
+	, ((noModMask, xF86XK_MonBrightnessUp), spawn "brightnessctl set +5%")
+	, ((noModMask, xF86XK_MonBrightnessDown), spawn "brightnessctl set 5%-")
+	, ((noModMask, xF86XK_AudioLowerVolume), spawn "pactl set-sink-volume @DEFAULT_SINK@ -5%")
+	, ((noModMask, xF86XK_AudioRaiseVolume), spawn "pactl set-sink-volume @DEFAULT_SINK@ +5%")
+	, ((noModMask, xF86XK_AudioMute), spawn "pactl set-sink-mute @DEFAULT_SINK@ toggle")
+	, ((noModMask, xF86XK_AudioMicMute), spawn "pactl set-source-mute @DEFAULT_SOURCE@ toggle")
 --	, ((modm .|. shiftMask, xK_Escape), shiftWithZero)
 --	, ((modm), submap . M.fromList $ [ ((modm), spawn "xmessage 'yes!'") ]
 --	, ((modm, xK_Page_Up), workspaceUp )
