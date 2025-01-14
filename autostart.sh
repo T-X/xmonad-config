@@ -19,3 +19,7 @@ pidof nm-applet || screen -S "xmonad-bg" -X screen \
 # Firefox
 pidof firefox || screen -S "xmonad-bg" -X screen \
 	firefox -P "default" -no-remote
+
+# KeePassXC
+pidof keepassxc || screen -S "xmonad-bg" -X screen \
+	keepassxc

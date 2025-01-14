@@ -94,6 +94,7 @@ switchKeyboardVariant = spawn "if setxkbmap -query | grep -q '^layout:.*us'; the
 myManageHook :: ManageHook
 myManageHook = composeAll
 	[ className =? "Vncviewer"	--> doShift "0"
+	, className =? "KeePassXC"	--> doShift "6"
 	, manageDocks
 	]
 
@@ -286,6 +287,7 @@ startup = do
 	spawnOn "5" myTerminalCmd
 	spawnOn "1" (myTerminalCmd ++ " -e 'sh -c \"screen -ls 'xmonad-bg' || screen -S 'xmonad-bg'\"'")
 	spawnOn "1" (myTerminalCmd ++ " -e 'sh -c \"pidof bluetoothctl || bluetoothctl\"'")
+	spawnOn "6" (myTerminalCmd ++ " -e 'sh -c \"pidof mosh-client || mosh odroid-nbsp\"'")
 	spawn "$HOME/.xmonad/autostart.sh"
 --	myTimer
 --	spawnOn "web" "/usr/lib/iceweasel/firefox-bin"
