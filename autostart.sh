@@ -15,3 +15,7 @@ pidof trayer || screen -S "xmonad-bg" -X screen \
 # nm-applet
 pidof nm-applet || screen -S "xmonad-bg" -X screen \
 	nm-applet
+
+# Firefox
+pidof firefox || screen -S "xmonad-bg" -X screen \
+	firefox -P "default" -no-remote
