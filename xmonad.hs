@@ -84,8 +84,8 @@ data Direction3D = XU -- X++
 		   deriving (Eq, Read, Show, Ord, Enum, Bounded)
 --		   deriving (Eq, Read, Show, Ord, Enum, Bounded, Typeable)
 
-workspaces :: [WorkspaceId]
-workspaces = map show [1 .. 9 :: Int] ++ ["0"]
+myWorkspaces :: [WorkspaceId]
+myWorkspaces = map show [1 .. 9 :: Int] ++ ["0"]
 
 myTerminalCmd = "xfce4-terminal --disable-server --hide-menubar"
 
@@ -114,7 +114,7 @@ main = do
 --	  terminal = "gnome-terminal --hide-menubar"
 	--, modMask = mod4Mask
 	, modMask = mod1Mask
-	, XMonad.workspaces = Main.workspaces
+	, workspaces = myWorkspaces
 --	, XMonad.layoutHook = layout
 --	, XMonad.borderWidth = 1
 	, XMonad.focusedBorderColor = "blue"
@@ -284,9 +284,8 @@ startup = do
 	spawnOnce "setxkbmap custom"
 	setWMName "LG3D" -- Breaks current gtk3 (this was a workaround for JDK6)
 	spawnOnce "$HOME/.xmonad/autostart.sh"
-	spawnOn "lshell" myTerminalCmd
-	spawnOn "0" myTerminalCmd
-	spawnOn "2" "pidof bluetoothctl || lxterminal -e 'bluetoothctl'"
+	spawnOn "5" myTerminalCmd
+	spawnOn "1" (myTerminalCmd ++ " -e 'sh -c \"pidof bluetoothctl || bluetoothctl\"'")
 --	myTimer
 --	spawnOn "web" "/usr/lib/iceweasel/firefox-bin"
 
