@@ -283,9 +283,10 @@ startup = do
 	--spawnOnce "setxkbmap lv && xmodmap $HOME/neon-def_de.xmodmap"
 	spawnOnce "setxkbmap custom"
 	setWMName "LG3D" -- Breaks current gtk3 (this was a workaround for JDK6)
-	spawnOnce "$HOME/.xmonad/autostart.sh"
 	spawnOn "5" myTerminalCmd
+	spawnOn "1" (myTerminalCmd ++ " -e 'sh -c \"screen -ls 'xmonad-bg' || screen -S 'xmonad-bg'\"'")
 	spawnOn "1" (myTerminalCmd ++ " -e 'sh -c \"pidof bluetoothctl || bluetoothctl\"'")
+	spawn "$HOME/.xmonad/autostart.sh"
 --	myTimer
 --	spawnOn "web" "/usr/lib/iceweasel/firefox-bin"
 
