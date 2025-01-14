@@ -87,6 +87,8 @@ data Direction3D = XU -- X++
 workspaces :: [WorkspaceId]
 workspaces = map show [1 .. 9 :: Int] ++ ["0"]
 
+myTerminalCmd = "xfce4-terminal --disable-server --hide-menubar"
+
 switchKeyboardVariant = spawn "if setxkbmap -query | grep -q '^layout:.*us'; then setxkbmap lv && xmodmap $HOME/neon-def_de.xmodmap; else setxkbmap us; fi"
 
 myManageHook :: ManageHook
@@ -107,7 +109,8 @@ myServedCommands = return
 
 main = do
 	xmonad $ ewmh defaultConfig {
-	  terminal = "lxterminal"
+	terminal = myTerminalCmd
+--	  terminal = "lxterminal"
 --	  terminal = "gnome-terminal --hide-menubar"
 	--, modMask = mod4Mask
 	, modMask = mod1Mask
@@ -237,7 +240,7 @@ toAdd conf@(XConfig {XMonad.modMask = modm}) =
 	, ((modm, xK_slash), switchKeyboardVariant)
 --	, ((modm, xK_m), spawnOn "rshell" "lxterminal")
 --	, ((modm, xK_m), bindOn $ zip (XMonad.workspaces conf) (replicate 9 $ spawnOn "rshell" "lxterminal"))
-	, ((modm, xK_m), bindOn [("0", sendKey modm xK_m), ("", spawnOn "rshell" "lxterminal")])
+	, ((modm, xK_m), bindOn [("0", sendKey modm xK_m), ("", spawnOn "rshell" myTerminalCmd)])
 --	, ((modm, xK_m), bindOn [("0", return ()), ("", spawnOn "rshell" "lxterminal")])
 	, ((modm, xK_z), return ())
 	, ((modm, xK_b), sendKey modm xK_b)
@@ -281,8 +284,8 @@ startup = do
 	spawnOnce "setxkbmap custom"
 	setWMName "LG3D" -- Breaks current gtk3 (this was a workaround for JDK6)
 	spawnOnce "$HOME/.xmonad/autostart.sh"
-	spawnOn "lshell" "lxterminal"
-	spawnOn "0" "lxterminal"
+	spawnOn "lshell" myTerminalCmd
+	spawnOn "0" myTerminalCmd
 	spawnOn "2" "pidof bluetoothctl || lxterminal -e 'bluetoothctl'"
 --	myTimer
 --	spawnOn "web" "/usr/lib/iceweasel/firefox-bin"
